@@ -37,4 +37,38 @@ def nfa_to_dfa(nfa):
     dfa = DFA()
     dfa.states = pow(2, nfa.states)
     dfa.letters = nfa.letters
+    dfa.start = [nfa.start, ]
+
+    trans = []
+    for dfa_state in range(dfa.states):
+        for a in dfa.letters:
+            bits = BitString(nfa.states, dfa_state)
+            in_list = []
+            out_set = set()
+            for i in range(nfa.states):
+                if bits.get_bit(i) == 1:
+                    in_list.append(i)
+                    if (i, a) in nfa.trans:
+                        out_set = out_set | nfa.trans[(i, a)]
+            trans.append([list(in_list), a, list(out_set)])
+
+    dfa.trans = trans
+
+    nfa_final = set(nfa.final)  # for fast membership testing
+    final = []
+    for dfa_state in range(dfa.states):
+        bits = BitString(nfa.states, dfa_state)
+        append = False
+        state_list = []
+        for i in range(nfa.states):
+            if bits.get_bit(i) == 1:
+                state_list.append(i)
+                if i in nfa_final:
+                    append = True
+        if append:
+            final.append(state_list)
+
     
+    dfa.final = final
+
+    return dfa

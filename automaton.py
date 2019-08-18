@@ -25,3 +25,12 @@ class DFA:
         self.start = start
         self.final = final
         self.trans = trans
+
+    def to_dict(self):
+        return  {
+            'states': self.states,
+            'letters': self.letters,
+            't_func': self.trans,
+            'start': self.start,
+            'final': self.final,
+        }
