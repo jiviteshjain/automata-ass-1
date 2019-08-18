@@ -19,7 +19,7 @@ dfa = nfa_to_dfa(nfa)
 data = dfa.to_dict()
 try:
     with open('output.json', 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f)
 except IOError:
     print('ERROR: Could not write to file output.json.\nSo, here\'s the output instead:')
     print(json.dumps(data))

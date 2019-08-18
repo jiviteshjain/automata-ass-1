@@ -1,0 +1,207 @@
+\documentclass[12pt]{scrreprt}
+
+\usepackage{minted}
+\usepackage{array}
+
+\usemintedstyle{autumn}
+
+\newcommand{\PreserveBackslash}[1]{\let\temp=\\#1\let\\=\temp}
+\newcolumntype{C}[1]{>{\PreserveBackslash\centering}p{#1}}
+
+\title{Automata Theory\\Assignment-1 Report}
+\author{Jivitesh Jain\\2018101092}
+\date{August 18, 2019}
+
+\begin{document}
+\maketitle
+    
+\chapter{Overview}
+    This bundle is a python program that converts a \emph{non-deterministic finite state automaton (NFA)} to an equivalent \emph{deterministic finite state automaton (DFA)}.
+    
+    \section{The Interface}
+    
+    The bundle consists of the following files:
+    \begin{itemize}
+        \item \mintinline{shell}{script.py}
+        \item \mintinline{shell}{automaton.py}
+        \item \mintinline{shell}{utils.py}
+        \item \mintinline{shell}{report.pdf} 
+    \end{itemize}
+    To run the program, create a file \mintinline{shell}{input.json} containing the input NFA definition as a \mintinline{shell}{json} object containing the following key-value pairs:
+    \begin{itemize}
+        \item \mintinline{json}{"states"}: Number of states
+        \item \mintinline{json}{"letters"}: Alphabet as a list
+        \item \mintinline{json}{"t_func"}: The transition relation
+        \item \mintinline{json}{"start"}: The start state
+        \item \mintinline{json}{"final"}: List of final states
+    \end{itemize}
+    Each state is represented by a number between 0 and one less than the number of states. The transition relation is a list of lists, each of which looks like:
+    \begin{minted}{python}
+        [current_state, input_alphabet, list_of_next_states]
+    \end{minted}
+    Then, execute:
+    \begin{minted}{shell}
+        $ python3 script.py
+    \end{minted}
+    This will create a file \mintinline{shell}{output.json} which will contain the output DFA in the same format as \mintinline{shell}{input.json}.
+
+    \section{Sample Input and Output}
+    \subsection*{\mintinline{shell}{input.json}}
+    \begin{minted}{json}
+        {
+            "states": 2,
+            "letters": ["a", "b"],
+            "t_func": [
+                        [0, "a", [0, 1]],
+                        [0, "b", [0]],
+                        [1, "b", [0]]
+                    ],
+            "start": 0,
+            "final": [0]
+        }
+    \end{minted}
+
+    \subsection*{\mintinline{shell}{output.json}}
+    \begin{minted}{json}
+        {
+            "states": 4,
+            "letters": ["a", "b"],
+            "t_func": [
+                        [[], "a", []],
+                        [[], "b", []],
+                        [[0], "a", [0, 1]],
+                        [[0], "b", [0]],
+                        [[1], "a", []],
+                        [[1], "b", [0]],
+                        [[0, 1], "a", [0, 1]],
+                        [[0, 1], "b", [0]]
+                      ],
+                "start": [0],
+                "final": [[0], [0, 1]]
+        }
+    \end{minted}
+
+    \section{The Algorithm}
+    The program uses the following algorithm to generate an equivalent DFA, given an NFA:
+    \begin{center}
+        Given an NFA $ N = (Q, \Sigma, \delta, q_0, F ) $, which recognizes a language $A$,\\
+         an equivalent DFA $M$ can be defined as:
+        $ M = (Q', \Sigma, \delta', q_0', F') $ 
+    \end{center}
+    where,
+    \begin{enumerate}
+        \item $ Q' = \mathcal{P} (Q) $
+        \item $ \delta'(R,a) = \bigcup\limits_{r \in R} \delta(r,a) $
+        \item $ q_0' = \{q_0\} $
+        \item $ F' = \{ R \in Q' | R \cap F \neq \phi  \} $
+    \end{enumerate}
+    The program does not account for NFA's with $ \varepsilon $ - transitions and does not perform state reduction
+
+    \chapter{Implementation}
+    
+    \section{Overview}
+    
+    The program defines and uses the following 3 classes:
+    
+    \subsection*{The NFA Class}
+    This class encapsulates an NFA, parsing its components from the given input dictionary.
+    The method \mintinline{python}{make_trans} converts the transition relation from a python-list to a python-dictionary (hashmap) with the keys as tuples of current state and the input alphabet and the values as python-sets of the next states. This allows for fast lookup of a transition and makes taking set-unions easier and faster.
+
+    \begin{minted}{python}
+        class NFA:
+            def __init__(self, nfa_dict):
+                self.trans = self.make_trans(nfa_dict['t_func'])
+                ...
+
+            def make_trans(self, arr):
+                trans = {}
+                for triplet in arr:
+                    trans[tuple(triplet[:2])] = set(triplet[2])
+                return trans
+    \end{minted}
+
+    \subsection*{The DFA Class}
+    This class encapsulates a DFA. Although all the attributes are set from outside by a separate function, it does provide a method to return a python-dictionary containing all the components of the DFA, which can then be directly converted to \mintinline{python}{json}.
+
+    \subsection*{The BitString Class}
+    This utility class simplifies conversion to and from the binary representation of the states of the DFA. This helps in mapping the states of the DFA to the states of the NFA they contain.
+
+    \begin{minted}{python}
+        class BitString:
+            def __init__(self, size, initial=0):
+                ...
+            def set_bit(self, pos, val):
+                ...
+            def get_bit(self, pos):
+                ...
+            def get_num(self):
+                ...
+            def set_num(self, num):
+                ...
+    \end{minted}
+
+    \section{Conversion}
+
+    The program uses the function \mintinline{python}{nfa_to_dfa} which accepts an NFA and returns an equivalent DFA.
+
+    \begin{minted}{python}
+        def nfa_to_dfa(nfa):
+            dfa = DFA()
+            ...
+        
+    \end{minted}
+
+    The conversion of each component of the automaton happens as follows:
+
+    \subsection*{States, Letters and the Start State}
+
+    \begin{minted}{python}
+        dfa.states = 2 ** nfa.states
+        dfa.letters = nfa.letters
+        dfa.start = [nfa.start]
+    \end{minted}
+    This is in accordance with the algorithm described above. Because the set of states of the DFA is the power set of the set of states of the NFA, an NFA with $ n $ states has $ 2^n $ states in its equivalent DFA, ranging from $ 0 $ to $ 2^n - 1 $.
+
+    \subsection*{Final States}
+
+    \begin{minted}{python}
+        nfa_final = set(nfa.final) # for fast membership testing
+        final = []
+        for dfa_state in range(dfa.states):
+            bits = BitString(nfa.states, dfa_state)
+            append = False
+            state_list = []
+            for i in range(nfa.states):
+                if bits.get_bit(i) == 1:
+                    state_list.append(i)
+                    if i in nfa_final:
+                        append = True
+            if append:
+                final.append(state_list)
+        dfa.final = final
+    \end{minted}
+    For each state \mintinline{python}{dfa_state} of the DFA, this piece of code loops over its binary representation to determine which all states of the NFA it contains (by checking if the corresponding bit is $1$). If any such state is a final state of the NFA, \mintinline{python}{dfa_state} is added to the list of final states of the DFA.
+
+
+    \subsection*{The Transition Function}
+
+    \begin{minted}{python}
+        trans = []
+        for dfa_state in range(dfa.states):
+            for a in dfa.letters:
+                bits = BitString(nfa.states, dfa_state)
+                in_list = []
+                out_set = set()
+                for i in range(nfa.states):
+                    if bits.get_bit(i) == 1:
+                        in_list.append(i)
+                        if (i, a) in nfa.trans:
+                            out_set = out_set | nfa.trans[(i, a)]
+                trans.append([list(in_list), a, list(out_set)])
+        dfa.trans = trans
+    \end{minted}
+    For each state \mintinline{python}{dfa_state} of the DFA and each input alphabet \mintinline{python}{a}, this piece of code loops over all the NFA states to determine which of those lie in \mintinline{python}{dfa_state}. Such states are then added to the list representation of \mintinline{python}{dfa_state} and their set of next states corresponding to \mintinline{python}{a} is then unioned to the set of next states for \mintinline{python}{dfa_state} and \mintinline{python}{a} in the DFA.
+
+    \section{Bringing it all together}
+    The script \mintinline{shell}{script.py} uses the \mintinline{python}{json} module to parse \mintinline{shell}{input.json} into a python-dictionary which it uses to create an object of the \mintinline{python}{NFA} class. It then calls  \mintinline{python}{nfa_to dfa} on this object, and uses the \mintinline{python}{json} module again to write the output to a \mintinline{shell}{json} file.
+\end{document}

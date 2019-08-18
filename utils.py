@@ -35,9 +35,9 @@ class BitString:
 
 def nfa_to_dfa(nfa):
     dfa = DFA()
-    dfa.states = pow(2, nfa.states)
+    dfa.states = 2 ** nfa.states
     dfa.letters = nfa.letters
-    dfa.start = [nfa.start, ]
+    dfa.start = [nfa.start]
 
     trans = []
     for dfa_state in range(dfa.states):
