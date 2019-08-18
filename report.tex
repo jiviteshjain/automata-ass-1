@@ -203,5 +203,5 @@
     For each state \mintinline{python}{dfa_state} of the DFA and each input alphabet \mintinline{python}{a}, this piece of code loops over all the NFA states to determine which of those lie in \mintinline{python}{dfa_state}. Such states are then added to the list representation of \mintinline{python}{dfa_state} and their set of next states corresponding to \mintinline{python}{a} is then unioned to the set of next states for \mintinline{python}{dfa_state} and \mintinline{python}{a} in the DFA.
 
     \section{Bringing it all together}
-    The script \mintinline{shell}{script.py} uses the \mintinline{python}{json} module to parse \mintinline{shell}{input.json} into a python-dictionary which it uses to create an object of the \mintinline{python}{NFA} class. It then calls  \mintinline{python}{nfa_to dfa} on this object, and uses the \mintinline{python}{json} module again to write the output to a \mintinline{shell}{json} file.
+    The script \mintinline{shell}{script.py} uses the \mintinline{python}{json} module to parse \mintinline{shell}{input.json} into a python-dictionary which it uses to create an object of the \mintinline{python}{NFA} class. It then calls  \mintinline{python}{nfa_to_dfa} on this object, and uses the \mintinline{python}{json} module again to write the output to a \mintinline{shell}{json} file.
 \end{document}
